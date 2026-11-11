@@ -11,7 +11,7 @@ Todo es procedural (three.js) y se renderiza fotograma a fotograma.
 
 ```bash
 npm install
-node render.mjs            # genera out/ciudad-bloques.mp4
+./render.sh                # genera out/ciudad-bloques.mp4
 node render.mjs --stills   # capturas de prueba en out/stills/
 ```
 

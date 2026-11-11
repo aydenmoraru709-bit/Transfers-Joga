@@ -1,5 +1,5 @@
 // Renderiza el vídeo fotograma a fotograma con Chromium (Playwright) y ffmpeg.
-// Uso:  node render.mjs            -> out/ciudad-bloques.mp4
+// Uso:  ./render.sh                -> out/ciudad-bloques.mp4 (reparte en procesos y mezcla el audio)
 //       node render.mjs --stills   -> out/stills/*.jpg (una captura por escena)
 import { createRequire } from 'node:module';
 const { chromium } = createRequire('/opt/node22/lib/node_modules/')('playwright');
@@ -35,23 +35,22 @@ if (process.argv.includes('--stills')) {
     await page.screenshot({ path: path.join(root, `out/stills/t${String(t).padStart(4, '0')}.jpg`), type: 'jpeg', quality: 80 });
   }
 } else {
-  const silent = path.join(root, 'out/silent.mp4');
-  const ff = spawn('ffmpeg', ['-y', '-v', 'error', '-f', 'image2pipe', '-c:v', 'mjpeg', '-framerate', String(FPS), '-i', '-',
-    '-c:v', 'libx264', '-preset', 'medium', '-crf', '19', '-pix_fmt', 'yuv420p', silent], { stdio: ['pipe', 'inherit', 'inherit'] });
+  // --part=i/n renderiza solo un tramo (para repartir el trabajo entre varios procesos)
+  const [pi, pn] = (process.argv.find((a) => a.startsWith('--part=')) ?? '--part=0/1').slice(7).split('/').map(Number);
   const total = Math.round(duration * FPS);
-  for (let f = 0; f < total; f++) {
+  const f0 = Math.floor((total * pi) / pn), f1 = Math.floor((total * (pi + 1)) / pn);
+  const part = path.join(root, `out/part_${String(pi).padStart(2, '0')}.mp4`);
+  const ff = spawn('ffmpeg', ['-y', '-v', 'error', '-f', 'image2pipe', '-c:v', 'mjpeg', '-framerate', String(FPS), '-i', '-',
+    '-c:v', 'libx264', '-preset', 'medium', '-crf', '21', '-pix_fmt', 'yuv420p', part + '.tmp.mp4'], { stdio: ['pipe', 'inherit', 'inherit'] });
+  for (let f = f0; f < f1; f++) {
     await page.evaluate((x) => window.renderFrame(x), f / FPS);
     const buf = await page.screenshot({ type: 'jpeg', quality: 94 });
     if (!ff.stdin.write(buf)) await new Promise((r) => ff.stdin.once('drain', r));
-    if (f % 90 === 0) console.log(`frame ${f}/${total}`);
+    if ((f - f0) % 60 === 0) console.log(`part ${pi}: frame ${f - f0}/${f1 - f0}`);
   }
   ff.stdin.end();
   await new Promise((r) => ff.on('close', r));
-  execFileSync('python3', [path.join(root, 'audio.py'), path.join(root, 'out/audio.wav')]);
-  execFileSync('ffmpeg', ['-y', '-v', 'error', '-i', silent, '-i', path.join(root, 'out/audio.wav'), '-c:v', 'copy',
-    '-c:a', 'aac', '-b:a', '160k', '-shortest', '-movflags', '+faststart', path.join(root, 'out/ciudad-bloques.mp4')]);
-  fs.rmSync(silent); fs.rmSync(path.join(root, 'out/audio.wav'));
-  console.log('OK out/ciudad-bloques.mp4');
+  fs.renameSync(part + '.tmp.mp4', part);
 }
 await browser.close();
 server.close();
