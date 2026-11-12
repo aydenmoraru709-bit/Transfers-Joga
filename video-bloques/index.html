@@ -38,6 +38,9 @@ canvas { position: absolute; left: 0; top: 0; image-rendering: pixelated; }
   <div id="tagA" class="tag">A</div><div id="tagB" class="tag">B</div><div id="tagC" class="tag">C</div>
 </div>
 <script type="importmap">{ "imports": { "three": "./node_modules/three/build/three.module.js" } }</script>
-<script type="module" src="scene.js"></script>
+<script type="module">
+  const ep = new URLSearchParams(location.search).get('ep') ?? '1';
+  import(ep === '1' ? './scene.js' : `./scene${ep}.js`);
+</script>
 </body>
 </html>

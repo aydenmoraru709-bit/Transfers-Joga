@@ -23,14 +23,15 @@ const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--ena
 const page = await browser.newPage({ viewport: { width: 1080, height: 1920 }, deviceScaleFactor: 1 });
 page.on('pageerror', (e) => { console.error('PAGE ERROR', e); process.exit(1); });
 page.on('console', (m) => m.type() === 'error' && console.error('console:', m.text()));
-await page.goto(`http://localhost:${port}/index.html`);
+const EP = process.env.EP ?? '1';
+await page.goto(`http://localhost:${port}/index.html?ep=${EP}`);
 await page.waitForFunction('window.ready === true', null, { timeout: 60000 });
 const duration = await page.evaluate('window.DURATION');
 fs.mkdirSync(path.join(root, 'out/stills'), { recursive: true });
 
 if (process.argv.includes('--stills')) {
   const times = [1, 4.5, 7.5, 9, 12, 14.8, 17, 19, 20.5, 24.9, 25.8, 27, 28.2, 29.4, 31, 32.5, 34, 36.8];
-  for (const t of times) {
+  for (const t of (await page.evaluate('window.STILLS')) ?? times) {
     await page.evaluate((x) => window.renderFrame(x), t);
     await page.screenshot({ path: path.join(root, `out/stills/t${String(t).padStart(4, '0')}.jpg`), type: 'jpeg', quality: 80 });
   }
@@ -41,7 +42,7 @@ if (process.argv.includes('--stills')) {
   const f0 = Math.floor((total * pi) / pn), f1 = Math.floor((total * (pi + 1)) / pn);
   const part = path.join(root, `out/part_${String(pi).padStart(2, '0')}.mp4`);
   const ff = spawn('ffmpeg', ['-y', '-v', 'error', '-f', 'image2pipe', '-c:v', 'mjpeg', '-framerate', String(FPS), '-i', '-',
-    '-c:v', 'libx264', '-preset', 'medium', '-crf', '21', '-pix_fmt', 'yuv420p', part + '.tmp.mp4'], { stdio: ['pipe', 'inherit', 'inherit'] });
+    '-c:v', 'libx264', '-preset', 'medium', '-crf', '24', '-maxrate', '6M', '-bufsize', '12M', '-pix_fmt', 'yuv420p', part + '.tmp.mp4'], { stdio: ['pipe', 'inherit', 'inherit'] });
   for (let f = f0; f < f1; f++) {
     await page.evaluate((x) => window.renderFrame(x), f / FPS);
     const buf = await page.screenshot({ type: 'jpeg', quality: 94 });
