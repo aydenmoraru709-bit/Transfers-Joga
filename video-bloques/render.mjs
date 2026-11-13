@@ -24,7 +24,7 @@ const page = await browser.newPage({ viewport: { width: 1080, height: 1920 }, de
 page.on('pageerror', (e) => { console.error('PAGE ERROR', e); process.exit(1); });
 page.on('console', (m) => m.type() === 'error' && console.error('console:', m.text()));
 const EP = process.env.EP ?? '1';
-await page.goto(`http://localhost:${port}/index.html?ep=${EP}`);
+await page.goto(`http://localhost:${port}/index.html?ep=${EP}${process.env.N ? `&n=${process.env.N}` : ''}`);
 await page.waitForFunction('window.ready === true', null, { timeout: 60000 });
 const duration = await page.evaluate('window.DURATION');
 fs.mkdirSync(path.join(root, 'out/stills'), { recursive: true });

@@ -32,6 +32,17 @@ EPISODES = {
         "¿Aún no tienes casa? Comenta, y te la construyo.",
         "¡Y a los cien, sorpresa!",
     ]),
+    # 04 = versión "sorpresa desbloqueada" (>= 100 seguidores); 06 = versión "aún no llegamos"
+    "3": ("vo3", [
+        "¡La ciudad no para de crecer!",
+        "¡Sesenta y dos casas nuevas en un solo día!",
+        "Cada una con vuestro nombre. Pausa el vídeo y busca la tuya.",
+        "Segunda votación: ¿A, hospital, o B, centro comercial?",
+        "¡Hemos llegado a cien habitantes! Mañana abrimos la sorpresa.",
+        "¿Aún no tienes casa? Comenta, y te la construyo.",
+        "¡Y a los cien, sorpresa!",
+        "Nuevo vídeo cada día a las cinco y veinte. Sígueme antes de las cinco, o no saldrás.",
+    ]),
 }
 EP = os.environ.get("EP", "1")
 VO_DIR, LINES = EPISODES[EP]

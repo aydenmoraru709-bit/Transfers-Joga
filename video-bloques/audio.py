@@ -3,7 +3,15 @@ import os, subprocess, sys
 import numpy as np
 
 EP = sys.argv[2] if len(sys.argv) > 2 else "1"
-SR, DUR = 44100, {"1": 37.0, "2": 24.8}[EP]
+N = int(sys.argv[3]) if len(sys.argv) > 3 else 100   # seguidores (episodio 3)
+SUR = N >= 100
+# tiempos del episodio 3 (los mismos que en scene3.js)
+T_LOTS, T_VOTE = 6.2, 6.2 + 16 * 0.9
+T_END = T_VOTE + 4.6
+T_CTA = T_END + 4.2 if SUR else T_END
+T_LAST = T_CTA + 3.6
+T_RULE = T_LAST if SUR else T_LAST + 2.2
+SR, DUR = 44100, {"1": 37.0, "2": 24.8, "3": T_RULE + 5.6}[EP]
 here = os.path.dirname(os.path.abspath(__file__))
 n = int(SR * DUR)
 t = np.arange(n) / SR
@@ -55,6 +63,19 @@ if EP == "1":
     add(sfx, note(110, 19.6, 0.4, "sin", 0.8, 9))                                 # regalo cae
     CUTS = (0, 3.2, 5.6, 8.0, 10.0, 14.0, 17.5, 19.3, 21.0, 25.0, 31.5, 33.1)
     VO_DIR, STARTS = "vo", [0, 3.2, 5.6, 8.0, 10.0, 14.0, 17.5, 19.3, 21.0, 25.0, 26.0, 27.2, 28.4, 29.6, 31.5, 33.1, 34.7]
+elif EP == "3":
+    for k in range(62):                                                           # lluvia de casas
+        pop(0.3 + k * 0.045, 480 + (k % 12) * 30, 0.16)
+        if k % 4 == 0: add(sfx, note(110, 0.3 + k * 0.045, 0.2, "sin", 0.4, 16))
+    for k in range(16):                                                           # una manzana por plano
+        for j in range(4): pop(T_LOTS + k * 0.9 + j * 0.06, 620 + j * 90, 0.26)
+    DINGS = (1.5, 3.0, T_VOTE, T_RULE) + ((T_END + 0.6,) if SUR else (T_LAST,))
+    if SUR: add(sfx, note(110, T_END + 0.4, 0.4, "sin", 0.8, 9))
+    CUTS = (0, 3.4, T_LOTS, T_VOTE, T_END, T_CTA, T_RULE)
+    VO_DIR = "vo3"
+    STARTS = {0: 0, 1: 3.4, 2: T_LOTS, 3: T_VOTE, 5: T_CTA, 7: T_RULE}
+    STARTS[4 if SUR else 6] = T_END if SUR else T_LAST
+    STARTS = [STARTS.get(i, -1) for i in range(8)]
 else:
     for k in range(18):                                                           # casas cayendo
         add(sfx, note(120, 0.3 + k * 0.15, 0.2, "sin", 0.5, 16)); pop(0.3 + k * 0.15, 520 + k * 20, 0.2)
@@ -71,6 +92,7 @@ for st in CUTS:                                                                 
 # --- voice
 voice = np.zeros(n)
 for i, st in enumerate(STARTS):
+    if st < 0: continue
     f = os.path.join(here, VO_DIR, f"{i:02d}.mp3")
     if not os.path.exists(f): continue
     raw = subprocess.run(["ffmpeg", "-v", "error", "-i", f, "-af", "silenceremove=start_periods=1:start_threshold=-45dB",
