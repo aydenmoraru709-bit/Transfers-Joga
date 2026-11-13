@@ -5,7 +5,8 @@ Todo es procedural (three.js) y se renderiza fotograma a fotograma.
 
 - `out/ciudad-bloques.mp4` — episodio 1 (ciudad vacía, 37 s).
 - `out/ciudad-bloques-2.mp4` — episodio 2 (28 habitantes, una casa por comentario, gana la plaza).
-- `scene.js` / `scene2.js` — mundo, cámaras, textos y línea de tiempo de cada episodio.
+- `out/ciudad-bloques-3.mp4` — episodio 3 (más de 100 habitantes, 62 casas nuevas, segunda votación, aviso del horario).
+- `scene.js` / `scene2.js` / `scene3.js` — mundo, cámaras, textos y línea de tiempo de cada episodio.
   En `scene2.js`, `NAMES` y `FOLLOWERS` son los datos reales (comentarios y seguidores).
 - `voice.py` — locución con ElevenLabs (frases en `vo/` y `vo2/`). Solo hay que volver a ejecutarlo si cambias el guion.
 - `audio.py` — mezcla música chiptune + efectos + locución.
@@ -15,6 +16,7 @@ Todo es procedural (three.js) y se renderiza fotograma a fotograma.
 npm install
 ./render.sh                       # episodio 1 -> out/ciudad-bloques.mp4
 EP=2 ./render.sh                  # episodio 2 -> out/ciudad-bloques-2.mp4
+EP=3 N=100 PLUS=1 ./render.sh     # episodio 3 (N = seguidores; PLUS=1 muestra "+100" si no se sabe la cifra exacta)
 EP=2 node render.mjs --stills     # capturas de prueba en out/stills/
 ```
 

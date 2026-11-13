@@ -88,6 +88,8 @@ const NEW_NAMES = ['ivan', ['Alexia', '#2a3f8f', '#18245c'], 'dariotello76', 'Jo
   'Aitor', 'Lucas_014', 'izzann_2', 'davix9039', 'Ramón al Jamon', 'Alejandro'].map((n) => (Array.isArray(n) ? n : [n]));
 const PREV = 28, FOLLOWERS = Number(new URLSearchParams(location.search).get('n') ?? 100), GOAL = 100;
 const SURPRISE = FOLLOWERS >= GOAL;
+// plus=1: no se sabe la cifra exacta, solo que se superó; se muestra "+100" / "MÁS DE 100"
+const PLUS = new URLSearchParams(location.search).get('plus') === '1', FTXT = (PLUS ? 'MÁS DE ' : '') + FOLLOWERS;
 const NLOTS = Math.ceil(NEW_NAMES.length / 4);
 const T_MAYOR = 3.4, T_LOTS = 6.2, SHOT = 0.9, T_VOTE = T_LOTS + NLOTS * SHOT, T_END = T_VOTE + 4.6;
 const T_CTA = SURPRISE ? T_END + 4.2 : T_END, T_LAST = T_CTA + 3.6;
@@ -341,11 +343,11 @@ const cams = [
 const Y = '#ffd23f', NN = NEW_NAMES.length;
 const caps = [
   { t0: 0, small: 'AYER', big: `${PREV} HABITANTES` },
-  { t0: 1.5, small: 'HOY', big: `¡${FOLLOWERS} HABITANTES!` },
+  { t0: 1.5, small: 'HOY', big: `¡${FTXT} HABITANTES!` },
   { t0: T_MAYOR, small: 'EN UN SOLO DÍA', big: `¡${NN} CASAS NUEVAS!` },
   ...blocksNew.map((b, k) => ({ t0: T_LOTS + k * SHOT, small: `CASAS ${k * 4 + 1}-${k * 4 + b.homes.length} DE ${NN}`, big: '', grid: b.homes, sub: 'PAUSA Y BUSCA LA TUYA', subKeep: k > 0 })),
   { t0: T_VOTE, small: 'SEGUNDA VOTACIÓN', big: '¿A O B?', sub: 'A: HOSPITAL  ·  B: CENTRO COMERCIAL' },
-  ...(SURPRISE ? [{ t0: T_END, small: `¡${FOLLOWERS} HABITANTES!`, big: 'SORPRESA', sub: 'DESBLOQUEADA · MAÑANA LA ABRIMOS' }] : []),
+  ...(SURPRISE ? [{ t0: T_END, small: `¡${FTXT} HABITANTES!`, big: 'SORPRESA', sub: 'DESBLOQUEADA · MAÑANA LA ABRIMOS' }] : []),
   { t0: T_CTA, small: '¿AÚN NO TIENES CASA?', big: 'COMENTA', sub: 'Y TE LA CONSTRUYO' },
   ...(SURPRISE ? [] : [{ t0: T_LAST, small: `A LOS ${GOAL}`, big: 'SORPRESA', sub: 'COMENTA Y TE CONSTRUYO TU CASA' }]),
   { t0: T_RULE, small: 'NUEVO VÍDEO CADA DÍA', big: 'A LAS 17:20', sub: 'SÍGUEME ANTES DE LAS 17:00 O NO SALES' },
@@ -423,7 +425,7 @@ function renderFrame(t) {
   el.hud.style.display = 'block';
   el.hudLabel.textContent = 'HABITANTES';
   const n = Math.round(lerp(PREV, FOLLOWERS, smooth(clamp01((t - 0.1) / 2.9))));
-  el.hudVal.textContent = !SURPRISE && t >= T_LAST && t < T_RULE ? `${FOLLOWERS} / ${GOAL}` : n;
+  el.hudVal.textContent = !SURPRISE && t >= T_LAST && t < T_RULE ? `${FOLLOWERS} / ${GOAL}` : PLUS && n === FOLLOWERS ? `+${n}` : n;
 
   const vote = t >= T_VOTE && t < T_END;
   place(el.A, VX, 4, C.z, vote); place(el.B, VX, 4, C.z - 11, vote);
